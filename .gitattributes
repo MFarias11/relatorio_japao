@@ -1,0 +1,21 @@
+# Normaliza finais de linha para LF em todo o repositorio.
+# Evita o churn recorrente de CRLF<->LF observado no ambiente WSL/Windows,
+# onde arquivos apareciam como "modificados" sem mudanca real de conteudo.
+* text=auto eol=lf
+
+# Scripts shell / entrypoints DEVEM ser LF (executados em containers Linux/Docker).
+*.sh text eol=lf
+
+# Scripts PowerShell mantem CRLF (convencao Windows); o blob no git continua LF.
+*.ps1 text eol=crlf
+
+# Arquivos explicitamente binarios — nunca normalizar.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
