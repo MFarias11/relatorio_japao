@@ -1,21 +1,27 @@
 /**
  * Entry point da aplicação React.
  *
- * Em ambiente de desenvolvimento, inicializa o MSW (Mock Service Worker)
- * para interceptar chamadas de rede antes de renderizar a aplicação.
- * Em produção, renderiza diretamente sem MSW.
+ * O MSW (Mock Service Worker) é opt-in: só é inicializado quando explicitamente
+ * solicitado via `VITE_ENABLE_MSW=true` em desenvolvimento. Por padrão (e em
+ * produção) a aplicação fala com o backend real, evitando que os mocks
+ * interceptem silenciosamente os writes e mascarem a persistência no banco.
  */
 import { createRoot } from "react-dom/client"
 import App from "./App.tsx"
 import "./index.css"
 
 /**
- * Ativa MSW apenas em modo desenvolvimento.
+ * Ativa o MSW apenas quando explicitamente habilitado (opt-in).
  *
- * @returns Promise que resolve quando o worker está pronto (dev) ou imediatamente (prod).
+ * O mock só liga em modo desenvolvimento E com `VITE_ENABLE_MSW=true`. Como os
+ * handlers do MSW guardam dados em memória (que somem a cada reload), deixá-lo
+ * ligado por engano contra o backend real faz parecer que os dados não
+ * persistem — por isso o default é desligado.
+ *
+ * @returns Promise que resolve quando o worker está pronto (mock ligado) ou imediatamente.
  */
 async function enableMocking() {
-  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW !== 'false') {
+  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW === 'true') {
     const { worker } = await import("./mocks/browser")
     return worker.start({ onUnhandledRequest: "bypass" })
   }

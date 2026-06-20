@@ -39,6 +39,9 @@ services:
       - backend
     environment:
       - VITE_API_URL=http://localhost:8000/api
+      # MSW desligado: o frontend fala com o backend real (Django + PostgreSQL).
+      # Para usar os mocks em memoria, mude para "true" (apenas desenvolvimento).
+      - VITE_ENABLE_MSW=false
 
 volumes:
   postgres_data:

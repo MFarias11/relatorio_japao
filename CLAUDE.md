@@ -412,9 +412,12 @@ Request → urls.py (Route) → Controller → Service → Repository → Model/
 
 ### MSW (Mock Service Worker)
 
-- Usado apenas em desenvolvimento para simular a API Django.
+- **Opt-in, DESLIGADO por padrão.** Só liga em desenvolvimento E com `VITE_ENABLE_MSW=true`.
+- Os handlers guardam dados **apenas em memória** (somem ao recarregar); deixá-lo ligado por
+  engano contra o backend real faz parecer que os dados não persistem no banco.
+- Usado para desenvolver a UI sem backend (simula a API Django).
 - Handlers em `packages/frontend/src/mocks/handlers/`.
-- Bootstrap condicional em `main.tsx` — zero impacto no build de produção.
+- Bootstrap condicional em `main.tsx` (`import.meta.env.DEV && VITE_ENABLE_MSW === 'true'`) — zero impacto no build de produção.
 
 Para detalhes completos de implementacao, consultar [docs/FRONTEND.md](docs/FRONTEND.md).
 Para design tokens, espacamento, tipografia e padroes visuais de componentes, consultar [.interface-design/system.md](.interface-design/system.md).

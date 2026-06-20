@@ -553,7 +553,9 @@ async function downloadReport(reportNumber: string, format: 'pdf' | 'xlsx') {
 
 ## MSW (Mock Service Worker)
 
-O MSW intercepta requisicoes de rede em desenvolvimento, permitindo desenvolvimento frontend independente do backend. A ativacao e condicional — apenas em `import.meta.env.DEV`.
+O MSW intercepta requisicoes de rede em desenvolvimento, permitindo desenvolvimento frontend independente do backend. A ativacao e **opt-in**: liga apenas em `import.meta.env.DEV` **E** com `VITE_ENABLE_MSW === 'true'`.
+
+> **Importante:** os handlers do MSW guardam dados **apenas em memoria** (resetam a cada reload da pagina) e **nao persistem no banco**. Por isso o default e DESLIGADO — deixar o mock ligado por engano contra o backend real faz parecer que as insercoes/edicoes nao persistem.
 
 ### Bootstrap condicional (main.tsx)
 
@@ -564,12 +566,12 @@ import App from "./App.tsx"
 import "./index.css"
 
 /**
- * Ativa MSW apenas em modo desenvolvimento.
+ * Ativa o MSW apenas quando explicitamente habilitado (opt-in).
  *
- * @returns Promise que resolve quando o worker está pronto (dev) ou imediatamente (prod).
+ * @returns Promise que resolve quando o worker está pronto (mock ligado) ou imediatamente.
  */
 async function enableMocking() {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW === 'true') {
     const { worker } = await import("./mocks/browser")
     return worker.start({ onUnhandledRequest: "bypass" })
   }
@@ -740,7 +742,7 @@ cd packages/frontend
 # Instalar dependencias
 npm install
 
-# Dev server (Vite, porta 8080) com MSW ativado
+# Dev server (Vite, porta 8080) — backend real; MSW so com VITE_ENABLE_MSW=true
 npm run dev
 
 # Build de producao

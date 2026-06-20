@@ -56,38 +56,29 @@ relatorio_japao/
 
 ## Como Executar
 
-### 1. Configurar variáveis de ambiente
+### Início rápido (recomendado)
 
-Copie os arquivos de exemplo e ajuste se necessário:
-
-```bash
-cp .env.example .env
-cp packages/frontend/.env.example packages/frontend/.env
-```
-
-> **Importante:** Nunca commite o `.env` real. Os `.example` já contêm valores padrão para desenvolvimento local.
-
-### 2a. Com Docker (recomendado)
+Um único comando sobe todo o sistema (db + backend + frontend) — não precisa configurar nada antes:
 
 ```bash
-docker-compose up --build
+scripts/dev.sh
 ```
 
-O entrypoint do backend executa automaticamente:
-1. Aguarda o PostgreSQL ficar pronto
-2. Aplica migrações (`migrate`)
-3. Carrega dados de teste (53 objetos: colaboradores, máquinas, software, 19 relatórios)
-4. Cria superusuário de desenvolvimento (se não existir)
+O script cuida de tudo: cria o `.env` a partir do `.env.example` se faltar, normaliza CRLF
+(WSL/Windows), builda e sobe os 3 containers, **espera cada serviço ficar pronto** e mostra as URLs.
 
-**Credenciais de desenvolvimento:**
+| Comando | O que faz |
+|---------|-----------|
+| `scripts/dev.sh` | build + sobe o stack (detached) e segue os logs |
+| `scripts/dev.sh --no-build` | sobe sem reconstruir as imagens (mais rápido) |
+| `scripts/dev.sh --logs` | apenas segue os logs do stack já em execução |
+| `scripts/dev.sh --down` | para o stack (mantém os dados do banco) |
+| `scripts/dev.sh --reset` | para o stack e **apaga** o volume do banco |
+| `scripts/dev.sh -h` | ajuda |
 
-| Credencial | Valor |
-|------------|-------|
-| Username | `admin` |
-| Password | `admin123` |
-| E-mail | `admin@jrc.com` |
-
-> **Nota:** Essas credenciais são apenas para desenvolvimento local. Em produção (`DEBUG=False`), `SECRET_KEY` e `DB_PASSWORD` são obrigatórios via `.env` — o servidor não inicia sem eles.
+No primeiro start, o entrypoint do backend aguarda o PostgreSQL, aplica migrações (`migrate`),
+carrega dados de teste (53 objetos: colaboradores, máquinas, software, 19 relatórios) e cria o
+superusuário de desenvolvimento.
 
 **Acessos:**
 
@@ -98,7 +89,19 @@ O entrypoint do backend executa automaticamente:
 | Django Admin | `http://localhost:8000/admin/` | admin / admin123 |
 | PostgreSQL | `localhost:5432` | DB: relatoriojapao |
 
-### 2b. Sem Docker
+> **Nota:** As credenciais `admin / admin123` são apenas para desenvolvimento local. Em produção
+> (`DEBUG=False`), `SECRET_KEY` e `DB_PASSWORD` são obrigatórios via `.env` — o servidor não inicia sem eles.
+
+### Alternativa: Docker manual
+
+Equivale ao `scripts/dev.sh`, mas sem os healthchecks e a criação automática do `.env`:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+### Alternativa: Sem Docker
 
 **Backend:**
 
@@ -124,15 +127,19 @@ npm run dev
 
 Acesse: `http://localhost:8080` — Login: admin / admin123
 
-### Conectar frontend ao backend real
+### MSW (mocks) é opt-in — backend real por padrão
 
-Por padrão o frontend usa MSW (Mock Service Worker) para simular a API. Para usar o backend real:
+Por padrão o frontend fala com o **backend real** (Django + PostgreSQL): os mocks do MSW
+ficam **desligados**. Os handlers do MSW guardam dados apenas em memória, que somem ao
+recarregar a página e **não persistem no banco** — por isso o MSW só liga quando pedido
+explicitamente. Para desenvolver a UI sem backend, habilite o mock:
 
 ```bash
-# No arquivo packages/frontend/.env, altere:
-VITE_API_URL=http://localhost:8000/api
-VITE_ENABLE_MSW=false
+# No arquivo packages/frontend/.env:
+VITE_ENABLE_MSW=true
 ```
+
+> No Docker, o `docker-compose.yml` já define `VITE_ENABLE_MSW=false` no serviço `frontend`.
 
 ## Domínio de Negócio
 
